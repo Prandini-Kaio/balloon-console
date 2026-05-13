@@ -6,10 +6,6 @@ export function getApiBaseUrl(): string {
   return raw.replace(/\/$/, '')
 }
 
-export function getCategoriesJson(): string {
-  return import.meta.env.VITE_CATEGORIES_JSON?.trim() ?? ''
-}
-
 export function companiesUseHttp(): boolean {
   return import.meta.env.VITE_COMPANIES_USE_HTTP === 'true'
 }
