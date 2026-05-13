@@ -1,6 +1,13 @@
 import { httpRequest } from '@/core/api/httpClient'
 
-export type CategoriaOutput = { nome: string }
+export type CategoriaOutput = {
+  id: number
+  nome: string
+}
+
+export async function listCategorias() {
+  return httpRequest<CategoriaOutput[]>({ path: '/evento/categoria' })
+}
 
 export async function fetchCategoriaById(id: number) {
   return httpRequest<CategoriaOutput>({

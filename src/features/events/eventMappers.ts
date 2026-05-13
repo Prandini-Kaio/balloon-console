@@ -13,7 +13,13 @@ export function resolveCategoriaIdFromName(
 }
 
 function toDatetimeLocal(iso: string): string {
-  const d = new Date(iso)
+  return formatIsoOrDatetimeToFormLocal(iso)
+}
+
+export function formatIsoOrDatetimeToFormLocal(value: string): string {
+  const t = value.trim()
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t
+  const d = new Date(t)
   if (Number.isNaN(d.getTime())) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
@@ -38,10 +44,12 @@ export function eventoOutputToFormValues(e: EventoOutput, companyId = '', catego
     dataFim: toDatetimeLocal(e.dataFim),
     ativo: e.isAtivo,
     companyId,
+    imagemCapaUrl: e.imagemCapaUrl ?? '',
   }
 }
 
 export function formValuesToEventoInput(v: EventFormValues): EventoInputBody {
+  const capa = v.imagemCapaUrl?.trim() ?? ''
   return {
     nome: v.nome.trim(),
     descricao: v.descricao.trim(),
@@ -53,5 +61,6 @@ export function formValuesToEventoInput(v: EventFormValues): EventoInputBody {
     dataInicio: fromDatetimeLocal(v.dataInicio),
     dataFim: fromDatetimeLocal(v.dataFim),
     ativo: v.ativo,
+    imagemCapaUrl: capa ? capa : null,
   }
 }

@@ -30,6 +30,7 @@ export type EventoOutput = {
   dataAtualizacao: string
   isPatrocinado: boolean
   isAtivo: boolean
+  imagemCapaUrl?: string | null
 }
 
 export type EventoInputBody = {
@@ -43,6 +44,7 @@ export type EventoInputBody = {
   dataInicio: string
   dataFim: string
   ativo: boolean
+  imagemCapaUrl?: string | null
 }
 
 export type EventFormValues = {
@@ -57,6 +59,7 @@ export type EventFormValues = {
   dataFim: string
   ativo: boolean
   companyId: string
+  imagemCapaUrl: string
 }
 
 export type EventoListFilter = {

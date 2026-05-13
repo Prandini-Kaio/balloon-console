@@ -1,7 +1,9 @@
 import { Controller, useForm } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -13,11 +15,14 @@ import {
   Select,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material'
-import type { CategoryOption } from '@/features/categories/useCategoryOptions'
+import type { CategoryOption } from '@/features/categories/types'
 import { eventFormSchema } from '@/features/events/eventFormSchema'
 import type { EventFormValues } from '@/features/events/types'
 import type { Company } from '@/features/companies/types'
+import { presignEventoCapa, putCapaToR2 } from '@/features/events/eventMedia.api'
+import { isApiFailure } from '@/core/api/types'
 
 type EventFormProps = {
   defaultValues: EventFormValues
@@ -36,19 +41,87 @@ export function EventForm({
   onCancel,
   submitLabel,
 }: EventFormProps) {
+  const [capaFile, setCapaFile] = useState<File | null>(null)
+  const [capaPreview, setCapaPreview] = useState<string | null>(null)
+  const [uploadErr, setUploadErr] = useState<string | null>(null)
+  const capaInputRef = useRef<HTMLInputElement>(null)
+
   const {
     control,
     handleSubmit,
     register,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     defaultValues,
+    values: defaultValues,
     resolver: zodResolver(eventFormSchema) as Resolver<EventFormValues>,
   })
 
+  const imagemCapaUrl = watch('imagemCapaUrl')
+
+  useEffect(() => {
+    return () => {
+      if (capaPreview?.startsWith('blob:')) URL.revokeObjectURL(capaPreview)
+    }
+  }, [capaPreview])
+
+  useEffect(() => {
+    setCapaFile(null)
+    setCapaPreview(null)
+    setUploadErr(null)
+  }, [defaultValues])
+
+  function onPickCapa(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    if (!f.type.startsWith('image/')) {
+      setUploadErr('Selecione um arquivo de imagem.')
+      return
+    }
+    setCapaFile(f)
+    setCapaPreview(URL.createObjectURL(f))
+    setUploadErr(null)
+  }
+
+  function clearCapa() {
+    setCapaFile(null)
+    setCapaPreview((prev) => {
+      if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+      return null
+    })
+    setValue('imagemCapaUrl', '')
+    setUploadErr(null)
+  }
+
+  async function onValid(values: EventFormValues) {
+    setUploadErr(null)
+    try {
+      let nextCapa = values.imagemCapaUrl?.trim() ?? ''
+      if (capaFile) {
+        const pr = await presignEventoCapa(capaFile.type, capaFile.name)
+        if (isApiFailure(pr)) {
+          setUploadErr(pr.message)
+          return
+        }
+        await putCapaToR2(pr.data.uploadUrl, capaFile, pr.data.contentType)
+        nextCapa = pr.data.publicUrl
+        setValue('imagemCapaUrl', nextCapa)
+      }
+      await onSubmit({ ...values, imagemCapaUrl: nextCapa })
+    } catch (err) {
+      setUploadErr(err instanceof Error ? err.message : 'Erro no upload')
+    }
+  }
+
+  const previewSrc = capaPreview || (imagemCapaUrl?.trim() ? imagemCapaUrl.trim() : '')
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <Box component="form" onSubmit={handleSubmit(onValid)} noValidate>
       <Stack spacing={2} sx={{ maxWidth: 720 }}>
+        <input type="hidden" {...register('imagemCapaUrl')} />
         <TextField
           label="Nome"
           {...register('nome')}
@@ -67,6 +140,42 @@ export function EventForm({
           multiline
           minRows={3}
         />
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Capa do evento (opcional)
+          </Typography>
+          {uploadErr ? (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {uploadErr}
+            </Alert>
+          ) : null}
+          {previewSrc ? (
+            <Box
+              component="img"
+              src={previewSrc}
+              alt="Pré-visualização da capa"
+              sx={{ maxWidth: '100%', maxHeight: 220, borderRadius: 1, display: 'block', mb: 1 }}
+            />
+          ) : null}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button type="button" variant="outlined" size="small" onClick={() => capaInputRef.current?.click()}>
+              Escolher imagem
+            </Button>
+            {previewSrc ? (
+              <Button type="button" variant="text" size="small" color="inherit" onClick={clearCapa}>
+                Remover capa
+              </Button>
+            ) : null}
+          </Stack>
+          <input
+            ref={capaInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            onChange={onPickCapa}
+          />
+          <FormHelperText>JPEG, PNG ou WebP. Upload direto ao R2 quando o servidor estiver configurado.</FormHelperText>
+        </Box>
         {categoryOptions.length > 0 ? (
           <Controller
             name="categoriaId"

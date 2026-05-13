@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Alert, Box, CircularProgress } from '@mui/material'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { EventForm } from '@/features/events/components/EventForm'
-import { useCategoryOptions } from '@/features/categories/useCategoryOptions'
+import { useCategoriesQuery } from '@/features/categories/useCategoriesQuery'
 import { listCompanies } from '@/features/companies/companies.api'
 import {
   eventoOutputToFormValues,
@@ -20,7 +20,8 @@ export function EventEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const eventId = Number(id)
-  const categoryOptions = useCategoryOptions()
+  const catQuery = useCategoriesQuery()
+  const categoryOptions = useMemo(() => catQuery.data ?? [], [catQuery.data])
   const companiesQuery = useQuery({ queryKey: ['companies'], queryFn: listCompanies })
   const eventQuery = useQuery({
     queryKey: ['event', eventId],
@@ -59,15 +60,22 @@ export function EventEditPage() {
     return <Alert severity="error">Identificador inválido</Alert>
   }
 
+  const pageLoading = eventQuery.isLoading || catQuery.isLoading
+
   return (
     <Box>
       <PageHeader title="Editar evento" />
+      {catQuery.isError ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Não foi possível carregar categorias da API: {(catQuery.error as Error).message}
+        </Alert>
+      ) : null}
       {companiesQuery.isError ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
           {(companiesQuery.error as Error).message}
         </Alert>
       ) : null}
-      {eventQuery.isLoading || !defaultValues ? (
+      {pageLoading || !defaultValues ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>

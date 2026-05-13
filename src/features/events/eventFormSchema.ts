@@ -13,4 +13,5 @@ export const eventFormSchema = z.object({
   dataFim: z.string().min(1, 'Obrigatório'),
   ativo: z.boolean(),
   companyId: z.string(),
+  imagemCapaUrl: z.string().optional().default(''),
 })
