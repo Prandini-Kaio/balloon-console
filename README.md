@@ -50,8 +50,9 @@ Definidas em `.env` (prefixo `VITE_`):
 | Variável | Descrição |
 | -------- | --------- |
 | `VITE_API_BASE_URL` | URL base da API (ex.: `https://seu-host/api/v1`). Deve incluir `/v1` se os paths do cliente forem `/evento`, `/auth/...`. |
-| `VITE_CATEGORIES_JSON` | JSON com opções de categoria no formulário de evento, ex.: `[{"id":1,"nome":"Show"}]`. |
-| `VITE_COMPANIES_USE_HTTP` | `true` para usar implementação HTTP (quando a API existir); `false` usa armazenamento local mock. |
+| `VITE_COMPANIES_USE_HTTP` | `true` para usar implementação HTTP em empresas; `false` usa armazenamento local mock. |
+
+Categorias vêm de `GET /evento/categoria` após login. Na tela **Novo evento** há importação por JSON (modelo no acordeão).
 
 ## Estrutura resumida
 
