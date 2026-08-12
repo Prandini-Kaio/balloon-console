@@ -17,6 +17,7 @@ export async function fetchEventosPage(
   if (filter.tipoEvento) query.tipoEvento = filter.tipoEvento
   if (filter.dataInicio) query.dataInicio = filter.dataInicio
   if (filter.dataFim) query.dataFim = filter.dataFim
+  if (filter.empresaId != null) query.empresaId = filter.empresaId
   return httpRequest<SpringPage<EventoOutput>>({
     path: '/evento',
     query,
@@ -28,7 +29,7 @@ export async function fetchEventoById(id: number) {
 }
 
 export async function createEvento(body: EventoInputBody) {
-  return httpRequest<null>({
+  return httpRequest<EventoOutput>({
     method: 'POST',
     path: '/evento',
     body,

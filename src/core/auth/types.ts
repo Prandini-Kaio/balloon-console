@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'company'
+export type UserRole = 'super_admin' | 'empresa'
 
 export type AuthUser = {
   id: string
@@ -7,6 +7,7 @@ export type AuthUser = {
   picture: string | null
   emailVerified: boolean
   role: UserRole
+  empresaId?: number
 }
 
 export type AuthState = {

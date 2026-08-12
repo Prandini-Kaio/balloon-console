@@ -1,4 +1,4 @@
-const defaultBase = 'https://balloon-backend-ukgk.onrender.com/api/v1'
+const defaultBase = 'http://localhost:8080/api/v1'
 
 export function getApiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_BASE_URL?.trim()

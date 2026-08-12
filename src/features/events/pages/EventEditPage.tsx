@@ -9,20 +9,28 @@ import { listCompanies } from '@/features/companies/companies.api'
 import {
   eventoOutputToFormValues,
   formValuesToEventoInput,
-  resolveCategoriaIdFromName,
+  resolveCategoriaIdsFromNames,
 } from '@/features/events/eventMappers'
 import { fetchEventoById } from '@/features/events/events.api'
 import { isApiFailure } from '@/core/api/types'
 import type { EventFormValues } from '@/features/events/types'
 import { useUpdateEventMutation } from '@/features/events/hooks/useEventMutations'
+import { useAuth } from '@/core/auth/AuthContext'
+import { isSuperAdmin } from '@/core/auth/mapUser'
 
 export function EventEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const eventId = Number(id)
   const catQuery = useCategoriesQuery()
   const categoryOptions = useMemo(() => catQuery.data ?? [], [catQuery.data])
-  const companiesQuery = useQuery({ queryKey: ['companies'], queryFn: listCompanies })
+  const showCompanyField = isSuperAdmin(user)
+  const companiesQuery = useQuery({
+    queryKey: ['companies'],
+    queryFn: listCompanies,
+    enabled: showCompanyField,
+  })
   const eventQuery = useQuery({
     queryKey: ['event', eventId],
     enabled: Number.isFinite(eventId) && eventId > 0,
@@ -36,20 +44,14 @@ export function EventEditPage() {
 
   const defaultValues = useMemo(() => {
     if (!eventQuery.data) return null
-    const catId = resolveCategoriaIdFromName(eventQuery.data.categoria, categoryOptions)
-    const storedCompany = sessionStorage.getItem(`balloon_event_company_${eventId}`) ?? ''
-    return eventoOutputToFormValues(eventQuery.data, storedCompany, catId)
-  }, [eventQuery.data, categoryOptions, eventId])
+    const catIds = resolveCategoriaIdsFromNames(eventQuery.data.categorias ?? [], categoryOptions)
+    return eventoOutputToFormValues(eventQuery.data, '', catIds)
+  }, [eventQuery.data, categoryOptions])
 
   async function onSubmit(values: EventFormValues) {
     if (!Number.isFinite(eventId) || eventId <= 0) return
     try {
       await updateMutation.mutateAsync({ id: eventId, body: formValuesToEventoInput(values) })
-      if (values.companyId) {
-        sessionStorage.setItem(`balloon_event_company_${eventId}`, values.companyId)
-      } else {
-        sessionStorage.removeItem(`balloon_event_company_${eventId}`)
-      }
       navigate('/admin/eventos')
     } catch (e) {
       window.alert(e instanceof Error ? e.message : 'Erro ao salvar')
@@ -87,6 +89,8 @@ export function EventEditPage() {
           defaultValues={defaultValues}
           categoryOptions={categoryOptions}
           companies={companiesQuery.data ?? []}
+          showCompanyField={showCompanyField}
+          eventoId={eventId}
           onSubmit={onSubmit}
           onCancel={() => navigate('/admin/eventos')}
           submitLabel="Salvar alterações"

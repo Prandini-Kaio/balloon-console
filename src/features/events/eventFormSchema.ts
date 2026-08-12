@@ -4,7 +4,9 @@ import { STATUS_EVENTO_VALUES, TIPO_EVENTO_VALUES } from '@/features/events/type
 export const eventFormSchema = z.object({
   nome: z.string().min(1, 'Obrigatório'),
   descricao: z.string().min(1, 'Obrigatório'),
-  categoriaId: z.coerce.number().int().positive('Informe um ID de categoria válido'),
+  categoriaIds: z
+    .array(z.coerce.number().int().positive())
+    .min(1, 'Selecione ao menos uma categoria'),
   status: z.enum(STATUS_EVENTO_VALUES).optional(),
   tipoEvento: z.enum(TIPO_EVENTO_VALUES),
   latitude: z.coerce.number(),
@@ -14,4 +16,7 @@ export const eventFormSchema = z.object({
   ativo: z.boolean(),
   companyId: z.string(),
   imagemCapaUrl: z.string().optional().default(''),
+  storageKeyCapa: z.string().optional().default(''),
+  whatsappContato: z.string().optional().default(''),
+  siteUrl: z.string().optional().default(''),
 })

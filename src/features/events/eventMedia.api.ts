@@ -9,13 +9,13 @@ export type EventoCapaPresignResponse = {
 }
 
 export async function presignEventoCapa(
+  eventoId: number,
   contentType: string,
-  filename?: string,
 ): Promise<ApiResult<EventoCapaPresignResponse>> {
   return httpRequest<EventoCapaPresignResponse>({
     method: 'POST',
     path: '/evento/midia/presign',
-    body: { contentType, filename: filename ?? '' },
+    body: { eventoId, contentType },
   })
 }
 

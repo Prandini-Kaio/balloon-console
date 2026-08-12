@@ -67,10 +67,13 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<ApiRe
     emitAuthLogout()
   }
   if (!response.ok) {
-    const message =
+    let message =
       typeof parsed === 'object' && parsed !== null && 'message' in parsed
         ? String((parsed as { message?: unknown }).message ?? response.statusText)
         : response.statusText || 'Erro na requisição'
+    if (response.status === 502) {
+      message = 'API indisponível (502). Verifique se o backend está em execução.'
+    }
     return { ok: false, status: response.status, message, body: parsed }
   }
   return { ok: true, data: parsed as T, status: response.status }

@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'balloon_web_token'
+const TOKEN_KEY = 'balloon_console_token'
 
 export function getStoredToken(): string | null {
   try {

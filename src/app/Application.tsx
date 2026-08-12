@@ -1,9 +1,10 @@
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
+import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { AuthProvider } from '@/core/auth/AuthContext'
+import { balloonTheme } from '@/core/theme/theme'
 import { AppRoutes } from '@/app/router'
 
 const queryClient = new QueryClient({
@@ -15,20 +16,15 @@ const queryClient = new QueryClient({
   },
 })
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: { main: '#6a1b9a' },
-    secondary: { main: '#00897b' },
-  },
-})
+const rawBase = import.meta.env.BASE_URL || '/'
+const routerBasename = rawBase === '/' ? undefined : rawBase.replace(/\/$/, '')
 
 export function Application() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={balloonTheme}>
         <CssBaseline />
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <AuthProvider>
             <AppRoutes />
           </AuthProvider>

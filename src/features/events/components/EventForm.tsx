@@ -28,7 +28,9 @@ type EventFormProps = {
   defaultValues: EventFormValues
   categoryOptions: CategoryOption[]
   companies: Company[]
-  onSubmit: (values: EventFormValues) => void | Promise<void>
+  showCompanyField?: boolean
+  eventoId?: number
+  onSubmit: (values: EventFormValues, capaFile?: File | null) => void | Promise<void>
   onCancel?: () => void
   submitLabel: string
 }
@@ -37,6 +39,8 @@ export function EventForm({
   defaultValues,
   categoryOptions,
   companies,
+  showCompanyField = true,
+  eventoId,
   onSubmit,
   onCancel,
   submitLabel,
@@ -93,6 +97,7 @@ export function EventForm({
       return null
     })
     setValue('imagemCapaUrl', '')
+    setValue('storageKeyCapa', '')
     setUploadErr(null)
   }
 
@@ -100,17 +105,20 @@ export function EventForm({
     setUploadErr(null)
     try {
       let nextCapa = values.imagemCapaUrl?.trim() ?? ''
-      if (capaFile) {
-        const pr = await presignEventoCapa(capaFile.type, capaFile.name)
+      let nextKey = values.storageKeyCapa?.trim() ?? ''
+      if (capaFile && eventoId) {
+        const pr = await presignEventoCapa(eventoId, capaFile.type)
         if (isApiFailure(pr)) {
           setUploadErr(pr.message)
           return
         }
         await putCapaToR2(pr.data.uploadUrl, capaFile, pr.data.contentType)
         nextCapa = pr.data.publicUrl
+        nextKey = pr.data.key
         setValue('imagemCapaUrl', nextCapa)
+        setValue('storageKeyCapa', nextKey)
       }
-      await onSubmit({ ...values, imagemCapaUrl: nextCapa })
+      await onSubmit({ ...values, imagemCapaUrl: nextCapa, storageKeyCapa: nextKey }, capaFile)
     } catch (err) {
       setUploadErr(err instanceof Error ? err.message : 'Erro no upload')
     }
@@ -140,6 +148,23 @@ export function EventForm({
           multiline
           minRows={3}
         />
+        <TextField
+          label="WhatsApp do evento"
+          {...register('whatsappContato')}
+          error={!!errors.whatsappContato}
+          helperText={
+            errors.whatsappContato?.message ??
+            'Opcional. Use DDI + DDD + número, ex: 5511999999999.'
+          }
+          fullWidth
+        />
+        <TextField
+          label="Site da empresa"
+          {...register('siteUrl')}
+          error={!!errors.siteUrl}
+          helperText={errors.siteUrl?.message ?? 'Opcional. Ex: https://empresa.com.br'}
+          fullWidth
+        />
         <Box>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
             Capa do evento (opcional)
@@ -157,8 +182,13 @@ export function EventForm({
               sx={{ maxWidth: '100%', maxHeight: 220, borderRadius: 1, display: 'block', mb: 1 }}
             />
           ) : null}
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button type="button" variant="outlined" size="small" onClick={() => capaInputRef.current?.click()}>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+            <Button
+              type="button"
+              variant="outlined"
+              size="small"
+              onClick={() => capaInputRef.current?.click()}
+            >
               Escolher imagem
             </Button>
             {previewSrc ? (
@@ -174,47 +204,54 @@ export function EventForm({
             hidden
             onChange={onPickCapa}
           />
-          <FormHelperText>JPEG, PNG ou WebP. Upload direto ao R2 quando o servidor estiver configurado.</FormHelperText>
+          <FormHelperText>
+            JPEG, PNG ou WebP. Upload direto ao R2 quando o servidor estiver configurado.
+          </FormHelperText>
         </Box>
-        {categoryOptions.length > 0 ? (
-          <Controller
-            name="categoriaId"
-            control={control}
-            render={({ field }) => (
-              <FormControl fullWidth error={!!errors.categoriaId}>
-                <InputLabel id="categoria-label">Categoria</InputLabel>
-                <Select
-                  labelId="categoria-label"
-                  label="Categoria"
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                >
-                  {categoryOptions.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.categoriaId ? (
-                  <FormHelperText>{errors.categoriaId.message}</FormHelperText>
-                ) : null}
-              </FormControl>
-            )}
-          />
-        ) : (
-          <TextField
-            label="ID da categoria"
-            type="number"
-            {...register('categoriaId', { valueAsNumber: true })}
-            error={!!errors.categoriaId}
-            helperText={
-              errors.categoriaId?.message ??
-              'Defina VITE_CATEGORIES_JSON no ambiente para lista guiada.'
-            }
-            fullWidth
-            required
-          />
-        )}
+        <Controller
+          name="categoriaIds"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth error={!!errors.categoriaIds} required>
+              <InputLabel id="categoria-label">Categorias</InputLabel>
+              <Select
+                labelId="categoria-label"
+                label="Categorias"
+                multiple
+                value={field.value ?? []}
+                onChange={(e) => {
+                  const v = e.target.value
+                  field.onChange(typeof v === 'string' ? v.split(',').map(Number) : (v as number[]))
+                }}
+                renderValue={(selected) =>
+                  (selected as number[])
+                    .map((id) => categoryOptions.find((c) => c.id === id)?.nome ?? String(id))
+                    .join(', ')
+                }
+              >
+                {categoryOptions.length === 0 ? (
+                  <MenuItem disabled value="">
+                    Nenhuma categoria cadastrada
+                  </MenuItem>
+                ) : (
+                  categoryOptions.map((c) => {
+                    const selected = (field.value ?? []).includes(c.id)
+                    return (
+                      <MenuItem key={c.id} value={c.id}>
+                        <Checkbox checked={selected} size="small" />
+                        {c.nome}
+                      </MenuItem>
+                    )
+                  })
+                )}
+              </Select>
+              <FormHelperText>
+                {(errors.categoriaIds?.message as string | undefined) ??
+                  'Selecione uma ou mais categorias já cadastradas.'}
+              </FormHelperText>
+            </FormControl>
+          )}
+        />
         <Controller
           name="status"
           control={control}
@@ -323,33 +360,32 @@ export function EventForm({
             />
           )}
         />
-        <Controller
-          name="companyId"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth>
-              <InputLabel id="company-label">Empresa (referência interna)</InputLabel>
-              <Select
-                labelId="company-label"
-                label="Empresa (referência interna)"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-              >
-                <MenuItem value="">
-                  <em>Nenhuma</em>
-                </MenuItem>
-                {companies.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.name}
+        {showCompanyField ? (
+          <Controller
+            name="companyId"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth>
+                <InputLabel id="company-label">Empresa</InputLabel>
+                <Select
+                  labelId="company-label"
+                  label="Empresa"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em>Nenhuma</em>
                   </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>
-                Campo preparado para vínculo futuro com a API; não é enviado ao backend.
-              </FormHelperText>
-            </FormControl>
-          )}
-        />
+                  {companies.map((c) => (
+                    <MenuItem key={c.id} value={String(c.id)}>
+                      {c.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          />
+        ) : null}
         <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
             {isSubmitting ? 'Salvando…' : submitLabel}

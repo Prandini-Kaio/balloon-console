@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isApiFailure } from '@/core/api/types'
 import { createEvento, deleteEvento, updateEvento } from '@/features/events/events.api'
-import type { EventoInputBody } from '@/features/events/types'
+import type { EventoInputBody, EventoOutput } from '@/features/events/types'
 
 export function useCreateEventMutation() {
   const qc = useQueryClient()
@@ -9,6 +9,7 @@ export function useCreateEventMutation() {
     mutationFn: async (body: EventoInputBody) => {
       const res = await createEvento(body)
       if (isApiFailure(res)) throw new Error(res.message)
+      return res.data as EventoOutput
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['events'] }),
   })

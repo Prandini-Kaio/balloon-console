@@ -38,7 +38,13 @@ export function EventJsonImporter({ onApply }: EventJsonImporterProps) {
 
   return (
     <Accordion disableGutters sx={{ mb: 2, '&:before': { display: 'none' } }}>
-      <AccordionSummary expandIcon={<Typography component="span" sx={{ fontSize: 18 }}>▾</Typography>}>
+      <AccordionSummary
+        expandIcon={
+          <Typography component="span" sx={{ fontSize: 18 }}>
+            ▾
+          </Typography>
+        }
+      >
         <Typography component="div" sx={{ fontWeight: 600 }}>
           Importar de JSON
         </Typography>
@@ -46,9 +52,10 @@ export function EventJsonImporter({ onApply }: EventJsonImporterProps) {
       <AccordionDetails>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            Cole um JSON com os campos que deseja preencher (parcial ou completo). Campos aceitos: nome,
-            descricao, categoriaId, status, tipoEvento, latitude, longitude, dataInicio, dataFim, ativo,
-            companyId. Datas em ISO ou no formato usado pelo campo local (AAAA-MM-DDTHH:mm).
+            Cole um JSON com os campos que deseja preencher (parcial ou completo). Campos aceitos:
+            nome, descricao, categoriaIds, status, tipoEvento, latitude, longitude, dataInicio,
+            dataFim, ativo, companyId, imagemCapaUrl, whatsappContato e siteUrl. Datas em ISO ou no
+            formato usado pelo campo local (AAAA-MM-DDTHH:mm).
           </Typography>
           <Button size="small" variant="outlined" onClick={handleFillExample}>
             Inserir modelo no campo

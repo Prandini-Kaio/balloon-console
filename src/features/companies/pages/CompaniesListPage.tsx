@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Paper,
   Table,
@@ -25,8 +26,8 @@ export function CompaniesListPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['companies'] }),
   })
 
-  async function onRemove(id: string, name: string) {
-    if (!window.confirm(`Remover "${name}" da lista local?`)) return
+  async function onRemove(id: number, name: string) {
+    if (!window.confirm(`Remover "${name}"?`)) return
     try {
       await removeMutation.mutateAsync(id)
     } catch (e) {
@@ -38,7 +39,7 @@ export function CompaniesListPage() {
     <Box>
       <PageHeader
         title="Empresas"
-        subtitle="Cadastro local até a API de empresas existir no backend"
+        subtitle="Contas empresariais e licenças SaaS"
         actions={
           <Button component={RouterLink} to="/admin/empresas/nova" variant="contained">
             Nova empresa
@@ -59,21 +60,36 @@ export function CompaniesListPage() {
             <TableHead>
               <TableRow>
                 <TableCell>Nome</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Licença</TableCell>
+                <TableCell>Usuários</TableCell>
                 <TableCell align="right">Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {query.data.map((row) => (
                 <TableRow key={row.id} hover>
-                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.nome}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                  <TableCell>
+                    {row.licencaStatus ? (
+                      <Chip size="small" label={row.licencaStatus} color={row.licencaStatus === 'ATIVA' ? 'success' : 'warning'} />
+                    ) : (
+                      '—'
+                    )}
+                  </TableCell>
+                  <TableCell>{row.totalUsuarios}</TableCell>
                   <TableCell align="right">
+                    <Button component={RouterLink} to={`/admin/empresas/${row.id}`} size="small">
+                      Detalhe
+                    </Button>
                     <Button component={RouterLink} to={`/admin/empresas/${row.id}/editar`} size="small">
                       Editar
                     </Button>
                     <Button
                       size="small"
                       color="error"
-                      onClick={() => onRemove(row.id, row.name)}
+                      onClick={() => onRemove(row.id, row.nome)}
                       disabled={removeMutation.isPending}
                       sx={{ ml: 1 }}
                     >

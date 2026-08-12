@@ -6,7 +6,7 @@ import { formatIsoOrDatetimeToFormLocal } from '@/features/events/eventMappers'
 export const EVENT_IMPORT_JSON_EXAMPLE = `{
   "nome": "Festa de lançamento",
   "descricao": "Descrição do evento para o app.",
-  "categoriaId": 1,
+  "categoriaIds": [1],
   "status": "ATIVO",
   "tipoEvento": "SOCIAL",
   "latitude": -23.55052,
@@ -15,24 +15,27 @@ export const EVENT_IMPORT_JSON_EXAMPLE = `{
   "dataFim": "2026-12-02T04:00:00",
   "ativo": true,
   "companyId": "",
-  "imagemCapaUrl": "https://exemplo.com/capa.jpg"
+  "imagemCapaUrl": "https://exemplo.com/capa.jpg",
+  "whatsappContato": "5511999999999",
+  "siteUrl": "https://empresa.com.br"
 }`
 
-const eventImportPartialSchema = z
-  .object({
-    nome: z.string().optional(),
-    descricao: z.string().optional(),
-    categoriaId: z.coerce.number().int().positive().optional(),
-    status: z.enum(STATUS_EVENTO_VALUES).optional(),
-    tipoEvento: z.enum(TIPO_EVENTO_VALUES).optional(),
-    latitude: z.coerce.number().optional(),
-    longitude: z.coerce.number().optional(),
-    dataInicio: z.string().optional(),
-    dataFim: z.string().optional(),
-    ativo: z.boolean().optional(),
-    companyId: z.string().optional(),
-    imagemCapaUrl: z.string().optional(),
-  })
+const eventImportPartialSchema = z.object({
+  nome: z.string().optional(),
+  descricao: z.string().optional(),
+  categoriaIds: z.array(z.coerce.number().int().positive()).min(1).optional(),
+  status: z.enum(STATUS_EVENTO_VALUES).optional(),
+  tipoEvento: z.enum(TIPO_EVENTO_VALUES).optional(),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
+  dataInicio: z.string().optional(),
+  dataFim: z.string().optional(),
+  ativo: z.boolean().optional(),
+  companyId: z.string().optional(),
+  imagemCapaUrl: z.string().optional(),
+  whatsappContato: z.string().optional(),
+  siteUrl: z.string().optional(),
+})
 
 export function parseEventImportJson(
   raw: string,
@@ -52,7 +55,7 @@ export function parseEventImportJson(
   const out: Partial<EventFormValues> = {}
   if (v.nome !== undefined) out.nome = v.nome
   if (v.descricao !== undefined) out.descricao = v.descricao
-  if (v.categoriaId !== undefined) out.categoriaId = v.categoriaId
+  if (v.categoriaIds !== undefined) out.categoriaIds = v.categoriaIds
   if (v.status !== undefined) out.status = v.status
   if (v.tipoEvento !== undefined) out.tipoEvento = v.tipoEvento
   if (v.latitude !== undefined) out.latitude = v.latitude
@@ -62,5 +65,7 @@ export function parseEventImportJson(
   if (v.ativo !== undefined) out.ativo = v.ativo
   if (v.companyId !== undefined) out.companyId = v.companyId
   if (v.imagemCapaUrl !== undefined) out.imagemCapaUrl = v.imagemCapaUrl
+  if (v.whatsappContato !== undefined) out.whatsappContato = v.whatsappContato
+  if (v.siteUrl !== undefined) out.siteUrl = v.siteUrl
   return { ok: true, value: out }
 }

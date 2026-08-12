@@ -15,3 +15,11 @@ export async function fetchCategoriaById(id: number) {
     query: { id },
   })
 }
+
+export async function createCategoria(input: { nome: string }) {
+  return httpRequest<null>({
+    method: 'POST',
+    path: '/evento/categoria',
+    body: input,
+  })
+}

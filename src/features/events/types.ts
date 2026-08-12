@@ -20,7 +20,7 @@ export type EventoOutput = {
   id: number
   nome: string
   descricao: string
-  categoria: string
+  categorias: string[]
   status: StatusEvento
   tipoEvento: TipoEvento
   localizacao: { latitude: number; longitude: number }
@@ -31,12 +31,17 @@ export type EventoOutput = {
   isPatrocinado: boolean
   isAtivo: boolean
   imagemCapaUrl?: string | null
+  storageKeyCapa?: string | null
+  whatsappContato?: string | null
+  siteUrl?: string | null
+  empresaId?: number | null
+  empresaNome?: string | null
 }
 
 export type EventoInputBody = {
   nome: string
   descricao: string
-  categoriaId: number
+  categoriaIds: number[]
   status?: StatusEvento
   tipoEvento: TipoEvento
   latitude: number
@@ -45,12 +50,16 @@ export type EventoInputBody = {
   dataFim: string
   ativo: boolean
   imagemCapaUrl?: string | null
+  storageKeyCapa?: string | null
+  whatsappContato?: string | null
+  siteUrl?: string | null
+  empresaId?: number | null
 }
 
 export type EventFormValues = {
   nome: string
   descricao: string
-  categoriaId: number
+  categoriaIds: number[]
   status?: StatusEvento
   tipoEvento: TipoEvento
   latitude: number
@@ -60,6 +69,9 @@ export type EventFormValues = {
   ativo: boolean
   companyId: string
   imagemCapaUrl: string
+  storageKeyCapa: string
+  whatsappContato: string
+  siteUrl: string
 }
 
 export type EventoListFilter = {
@@ -69,6 +81,7 @@ export type EventoListFilter = {
   tipoEvento?: TipoEvento
   dataInicio?: string
   dataFim?: string
+  empresaId?: number
 }
 
 export type SpringPage<T> = {

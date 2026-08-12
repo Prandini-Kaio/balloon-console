@@ -24,10 +24,20 @@ import { formatDateTimePt } from '@/shared/lib/dateFormat'
 import { useEventsPageQuery } from '@/features/events/hooks/useEventsPageQuery'
 import { useDeleteEventMutation } from '@/features/events/hooks/useEventMutations'
 import type { EventoListFilter, StatusEvento } from '@/features/events/types'
+import { useAuth } from '@/core/auth/AuthContext'
+import { isEmpresa, isSuperAdmin } from '@/core/auth/mapUser'
+import { hasPermissao, useLicencaStatusQuery } from '@/features/licenses/hooks/useLicencaStatus'
 
 const defaultSize = 10
 
 export function EventsListPage() {
+  const { user } = useAuth()
+  const licencaQuery = useLicencaStatusQuery(isEmpresa(user))
+  const canCreate = isSuperAdmin(user) || hasPermissao(licencaQuery.data, 'EVENTOS_CRIAR')
+  const canEdit = isSuperAdmin(user) || hasPermissao(licencaQuery.data, 'EVENTOS_EDITAR')
+  const canDelete = isSuperAdmin(user) || hasPermissao(licencaQuery.data, 'EVENTOS_EXCLUIR')
+  const canMetrics = isSuperAdmin(user) || hasPermissao(licencaQuery.data, 'EVENTOS_METRICAS')
+
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(defaultSize)
   const [nome, setNome] = useState('')
@@ -61,15 +71,23 @@ export function EventsListPage() {
     }
   }
 
+  const maxEventos = licencaQuery.data?.politica?.maxEventos
+  const usedHint =
+    isEmpresa(user) && maxEventos != null
+      ? `Limite da licença: ${maxEventos} eventos`
+      : undefined
+
   return (
     <Box>
       <PageHeader
         title="Eventos"
-        subtitle="Cadastro e gestão de eventos exibidos no app"
+        subtitle={usedHint ?? 'Cadastro e gestão de eventos exibidos no app'}
         actions={
-          <Button component={RouterLink} to="/admin/eventos/novo" variant="contained">
-            Novo evento
-          </Button>
+          canCreate ? (
+            <Button component={RouterLink} to="/admin/eventos/novo" variant="contained">
+              Novo evento
+            </Button>
+          ) : null
         }
       />
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -118,7 +136,7 @@ export function EventsListPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Nome</TableCell>
-                  <TableCell>Categoria</TableCell>
+                  <TableCell>Categorias</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Início</TableCell>
                   <TableCell align="right">Ações</TableCell>
@@ -128,22 +146,36 @@ export function EventsListPage() {
                 {query.data.content.map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell>{row.nome}</TableCell>
-                    <TableCell>{row.categoria}</TableCell>
+                    <TableCell>{row.categorias?.length ? row.categorias.join(', ') : '—'}</TableCell>
                     <TableCell>{row.status}</TableCell>
                     <TableCell>{formatDateTimePt(row.dataInicio)}</TableCell>
                     <TableCell align="right">
-                      <Button component={RouterLink} to={`/admin/eventos/${row.id}/editar`} size="small">
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() => onDelete(row.id, row.nome)}
-                        disabled={deleteMutation.isPending}
-                        sx={{ ml: 1 }}
-                      >
-                        Excluir
-                      </Button>
+                      {canMetrics ? (
+                        <Button component={RouterLink} to={`/admin/eventos/${row.id}`} size="small">
+                          Métricas
+                        </Button>
+                      ) : null}
+                      {canEdit ? (
+                        <Button
+                          component={RouterLink}
+                          to={`/admin/eventos/${row.id}/editar`}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        >
+                          Editar
+                        </Button>
+                      ) : null}
+                      {canDelete ? (
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => onDelete(row.id, row.nome)}
+                          disabled={deleteMutation.isPending}
+                          sx={{ ml: 1 }}
+                        >
+                          Excluir
+                        </Button>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,15 +1,11 @@
-import type {
-  EventFormValues,
-  EventoInputBody,
-  EventoOutput,
-} from '@/features/events/types'
+import type { EventFormValues, EventoInputBody, EventoOutput } from '@/features/events/types'
 
-export function resolveCategoriaIdFromName(
-  nome: string,
+export function resolveCategoriaIdsFromNames(
+  nomes: string[],
   options: { id: number; nome: string }[],
-): number {
-  const found = options.find((o) => o.nome === nome)
-  return found?.id ?? 0
+): number[] {
+  const set = new Set(nomes.map((n) => n.trim().toLowerCase()))
+  return options.filter((o) => set.has(o.nome.trim().toLowerCase())).map((o) => o.id)
 }
 
 function toDatetimeLocal(iso: string): string {
@@ -31,11 +27,15 @@ function fromDatetimeLocal(value: string): string {
   return value
 }
 
-export function eventoOutputToFormValues(e: EventoOutput, companyId = '', categoriaId = 0): EventFormValues {
+export function eventoOutputToFormValues(
+  e: EventoOutput,
+  companyId = '',
+  categoriaIds: number[] = [],
+): EventFormValues {
   return {
     nome: e.nome,
     descricao: e.descricao,
-    categoriaId,
+    categoriaIds,
     status: e.status,
     tipoEvento: e.tipoEvento,
     latitude: e.localizacao.latitude,
@@ -43,17 +43,23 @@ export function eventoOutputToFormValues(e: EventoOutput, companyId = '', catego
     dataInicio: toDatetimeLocal(e.dataInicio),
     dataFim: toDatetimeLocal(e.dataFim),
     ativo: e.isAtivo,
-    companyId,
+    companyId: companyId || (e.empresaId != null ? String(e.empresaId) : ''),
     imagemCapaUrl: e.imagemCapaUrl ?? '',
+    storageKeyCapa: e.storageKeyCapa ?? '',
+    whatsappContato: e.whatsappContato ?? '',
+    siteUrl: e.siteUrl ?? '',
   }
 }
 
 export function formValuesToEventoInput(v: EventFormValues): EventoInputBody {
   const capa = v.imagemCapaUrl?.trim() ?? ''
+  const whatsappContato = v.whatsappContato?.trim() ?? ''
+  const siteUrl = v.siteUrl?.trim() ?? ''
+  const empresaId = v.companyId?.trim() ? Number(v.companyId) : null
   return {
     nome: v.nome.trim(),
     descricao: v.descricao.trim(),
-    categoriaId: v.categoriaId,
+    categoriaIds: v.categoriaIds,
     status: v.status,
     tipoEvento: v.tipoEvento,
     latitude: v.latitude,
@@ -62,5 +68,9 @@ export function formValuesToEventoInput(v: EventFormValues): EventoInputBody {
     dataFim: fromDatetimeLocal(v.dataFim),
     ativo: v.ativo,
     imagemCapaUrl: capa ? capa : null,
+    storageKeyCapa: v.storageKeyCapa?.trim() ? v.storageKeyCapa.trim() : null,
+    whatsappContato: whatsappContato ? whatsappContato : null,
+    siteUrl: siteUrl ? siteUrl : null,
+    empresaId: empresaId != null && !Number.isNaN(empresaId) ? empresaId : null,
   }
 }
