@@ -27,7 +27,8 @@ jobs:
         run: npm ci
       - name: Build
         env:
-          VITE_BASE: /${{ github.event.repository.name }}/
+          # Domínio próprio (console.balloon.app.br) usa raiz, não /repo/
+          VITE_BASE: /
           VITE_API_BASE_URL: https://api.balloon.app.br/api/v1
           VITE_COMPANIES_USE_HTTP: 'true'
         run: npm run build:prod

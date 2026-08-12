@@ -65,7 +65,7 @@ export function LoginPage() {
         <Stack spacing={1.5} sx={{ mb: 3, alignItems: 'flex-start' }}>
           <BrandLogo variant="lateral" height={44} />
           <Typography variant="h5" component="h1">
-            Entrar no painel
+            Balloon Console
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Acesso para conta Balloon e empresas assinantes.

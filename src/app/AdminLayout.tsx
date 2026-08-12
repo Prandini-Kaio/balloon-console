@@ -75,7 +75,7 @@ export function AdminLayout() {
             <BrandLogo variant="icon" height={32} />
           </Box>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontFamily: 'Poppins, sans-serif' }}>
-            {isSuperAdmin(user) ? 'Balloon Admin' : 'Balloon Empresa'}
+            {isSuperAdmin(user) ? 'Balloon Console' : 'Balloon Empresa'}
           </Typography>
           {user ? (
             <Typography variant="body2" color="inherit" sx={{ opacity: 0.9 }}>
