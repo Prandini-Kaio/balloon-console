@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminLayout } from '@/app/AdminLayout'
 import { ProtectedRoute } from '@/app/ProtectedRoute'
 import { RoleRoute } from '@/app/RoleRoute'
+import { PermissionRoute } from '@/app/PermissionRoute'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { EventsListPage } from '@/features/events/pages/EventsListPage'
 import { EventNewPage } from '@/features/events/pages/EventNewPage'
@@ -16,6 +17,7 @@ import { RegioesDestaquePage } from '@/features/appDestaque/pages/RegioesDestaqu
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { LicensesPage } from '@/features/licenses/pages/LicensesPage'
 import { MyLicensePage } from '@/features/licenses/pages/MyLicensePage'
+import { AdminsPage } from '@/features/admins/pages/AdminsPage'
 
 export function AppRoutes() {
   return (
@@ -33,14 +35,25 @@ export function AppRoutes() {
             <Route path="minha-licenca" element={<MyLicensePage />} />
           </Route>
           <Route element={<RoleRoute roles={['super_admin']} />}>
-            <Route path="categorias" element={<CategoriesListPage />} />
-            <Route path="regioes-destaque" element={<RegioesDestaquePage />} />
-            <Route path="campanhas-destaque" element={<CampanhasDestaquePage />} />
-            <Route path="empresas" element={<CompaniesListPage />} />
-            <Route path="empresas/nova" element={<CompanyFormPage />} />
-            <Route path="empresas/:id" element={<CompanyDetailPage />} />
-            <Route path="empresas/:id/editar" element={<CompanyFormPage />} />
-            <Route path="licencas" element={<LicensesPage />} />
+            <Route element={<PermissionRoute permission="CATEGORIAS_GERIR" />}>
+              <Route path="categorias" element={<CategoriesListPage />} />
+            </Route>
+            <Route element={<PermissionRoute permission="DESTAQUES_GERIR" />}>
+              <Route path="regioes-destaque" element={<RegioesDestaquePage />} />
+              <Route path="campanhas-destaque" element={<CampanhasDestaquePage />} />
+            </Route>
+            <Route element={<PermissionRoute permission="EMPRESAS_GERIR" />}>
+              <Route path="empresas" element={<CompaniesListPage />} />
+              <Route path="empresas/nova" element={<CompanyFormPage />} />
+              <Route path="empresas/:id" element={<CompanyDetailPage />} />
+              <Route path="empresas/:id/editar" element={<CompanyFormPage />} />
+            </Route>
+            <Route element={<PermissionRoute permission="LICENCAS_GERIR" />}>
+              <Route path="licencas" element={<LicensesPage />} />
+            </Route>
+            <Route element={<PermissionRoute permission="ADMINS_GERIR" />}>
+              <Route path="admins" element={<AdminsPage />} />
+            </Route>
           </Route>
         </Route>
       </Route>

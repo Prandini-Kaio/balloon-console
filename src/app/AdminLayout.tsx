@@ -15,7 +15,8 @@ import {
   Typography,
 } from '@mui/material'
 import { useAuth } from '@/core/auth/AuthContext'
-import { isEmpresa, isSuperAdmin } from '@/core/auth/mapUser'
+import { hasAdminPermissao, isEmpresa, isSuperAdmin } from '@/core/auth/mapUser'
+import type { AdminPermissao } from '@/core/auth/types'
 import { marcarAlertaLido } from '@/features/licenses/licenses.api'
 import { BrandLogo } from '@/shared/ui/BrandLogo'
 import { balloonColors } from '@/core/theme/tokens'
@@ -24,17 +25,20 @@ import { LicenseRenewalGate } from '@/features/licenses/components/LicenseRenewa
 
 const drawerWidth = 248
 
-const adminNav = [
-  { to: '/admin/dashboard', label: 'Dashboard' },
-  { to: '/admin/eventos', label: 'Eventos' },
-  { to: '/admin/categorias', label: 'Categorias' },
-  { to: '/admin/regioes-destaque', label: 'Regiões' },
-  { to: '/admin/campanhas-destaque', label: 'Destaques no app' },
-  { to: '/admin/empresas', label: 'Empresas' },
-  { to: '/admin/licencas', label: 'Licenças' },
+type NavItem = { to: string; label: string; permission?: AdminPermissao }
+
+const adminNav: NavItem[] = [
+  { to: '/admin/dashboard', label: 'Dashboard', permission: 'DASHBOARD_ADMIN' },
+  { to: '/admin/eventos', label: 'Eventos', permission: 'EVENTOS_GLOBAL' },
+  { to: '/admin/categorias', label: 'Categorias', permission: 'CATEGORIAS_GERIR' },
+  { to: '/admin/regioes-destaque', label: 'Regiões', permission: 'DESTAQUES_GERIR' },
+  { to: '/admin/campanhas-destaque', label: 'Destaques no app', permission: 'DESTAQUES_GERIR' },
+  { to: '/admin/empresas', label: 'Empresas', permission: 'EMPRESAS_GERIR' },
+  { to: '/admin/licencas', label: 'Licenças', permission: 'LICENCAS_GERIR' },
+  { to: '/admin/admins', label: 'Administradores', permission: 'ADMINS_GERIR' },
 ]
 
-const empresaNav = [
+const empresaNav: NavItem[] = [
   { to: '/admin/dashboard', label: 'Dashboard' },
   { to: '/admin/eventos', label: 'Meus eventos' },
   { to: '/admin/minha-licenca', label: 'Minha licença' },
@@ -51,7 +55,9 @@ export function AdminLayout() {
   const { user, logout } = useAuth()
   const location = useLocation()
   const qc = useQueryClient()
-  const navItems = isSuperAdmin(user) ? adminNav : empresaNav
+  const navItems = isSuperAdmin(user)
+    ? adminNav.filter((item) => !item.permission || hasAdminPermissao(user, item.permission))
+    : empresaNav
   const empresa = isEmpresa(user)
 
   const licencaQuery = useLicencaStatusQuery(empresa)

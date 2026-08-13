@@ -12,7 +12,7 @@ import {
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { StatCard } from '@/shared/ui/StatCard'
 import { useAuth } from '@/core/auth/AuthContext'
-import { isSuperAdmin } from '@/core/auth/mapUser'
+import { hasAdminPermissao, isSuperAdmin } from '@/core/auth/mapUser'
 import { fetchDashboardAdmin, fetchDashboardEmpresa } from '@/features/dashboard/dashboard.api'
 import { isApiFailure } from '@/core/api/types'
 import { formatDateTimePt } from '@/shared/lib/dateFormat'
@@ -146,10 +146,11 @@ function EmpresaDashboardView({ data }: { data: DashboardEmpresaOutput }) {
 export function DashboardPage() {
   const { user } = useAuth()
   const admin = isSuperAdmin(user)
+  const canAdminDashboard = hasAdminPermissao(user, 'DASHBOARD_ADMIN')
 
   const adminQuery = useQuery({
     queryKey: ['dashboard', 'admin'],
-    enabled: admin,
+    enabled: admin && canAdminDashboard,
     queryFn: async () => {
       const res = await fetchDashboardAdmin()
       if (isApiFailure(res)) throw new Error(res.message)
@@ -175,7 +176,11 @@ export function DashboardPage() {
         title="Dashboard"
         subtitle={admin ? 'Visão geral da plataforma Balloon' : 'Resumo da sua empresa'}
       />
-      {query.isLoading ? (
+      {admin && !canAdminDashboard ? (
+        <Alert severity="info">
+          Sua conta não tem permissão de dashboard administrativo. Use o menu lateral para as áreas liberadas.
+        </Alert>
+      ) : query.isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>

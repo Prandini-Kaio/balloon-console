@@ -10,6 +10,7 @@ export type AuthUserResponse = {
   emailVerified: boolean
   role?: string
   empresaId?: number
+  permissoes?: string[]
 }
 
 export type LoginResponse = {
