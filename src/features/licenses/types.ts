@@ -92,12 +92,16 @@ export type LicencaPlanoConfig = {
   maxEventos: number | null
   maxUsuarios: number | null
   permissoes: LicencaPermissao[]
+  valorCentavos: number
+  periodoDias: number
 }
 
 export type LicencaPlanoConfigInput = {
   maxEventos: number | null
   maxUsuarios: number | null
   permissoes: LicencaPermissao[]
+  valorCentavos: number
+  periodoDias: number
 }
 
 export const PERMISSAO_LABELS: Record<LicencaPermissao, string> = {
