@@ -5,7 +5,3 @@ export function getApiBaseUrl(): string {
   if (!raw) return defaultBase
   return raw.replace(/\/$/, '')
 }
-
-export function companiesUseHttp(): boolean {
-  return import.meta.env.VITE_COMPANIES_USE_HTTP === 'true'
-}

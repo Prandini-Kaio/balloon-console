@@ -27,13 +27,13 @@ export function marcarAlertaLido(alertaId: number) {
 export function createLicenca(empresaId: number, body: LicencaInput) {
   return httpRequest<LicencaOutput>({
     method: 'POST',
-    path: `/conta/empresas/${empresaId}/licencas`,
+    path: `/empresa/${empresaId}/licencas`,
     body,
   })
 }
 
 export function listLicencas(empresaId: number) {
-  return httpRequest<LicencaOutput[]>({ path: `/conta/empresas/${empresaId}/licencas` })
+  return httpRequest<LicencaOutput[]>({ path: `/empresa/${empresaId}/licencas` })
 }
 
 export function listLicencasAdmin(params?: {
@@ -96,6 +96,6 @@ export function updatePlanoConfig(plano: LicencaPlano, body: LicencaPlanoConfigI
 export function reativarEventosEmpresa(empresaId: number) {
   return httpRequest<{ reativados: number }>({
     method: 'POST',
-    path: `/conta/empresas/${empresaId}/eventos/reativar`,
+    path: `/empresa/${empresaId}/eventos/reativar`,
   })
 }
