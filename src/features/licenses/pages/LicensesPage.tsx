@@ -61,6 +61,18 @@ function alertaLabel(tipo: string): string {
   return tipo
 }
 
+function centavosToReaisInput(centavos: number | null | undefined): string {
+  const value = centavos == null ? 0 : centavos
+  return (value / 100).toFixed(2).replace('.', ',')
+}
+
+function reaisToCentavos(raw: string): number {
+  const normalized = raw.trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+  const reais = Number(normalized)
+  if (!Number.isFinite(reais)) return Number.NaN
+  return Math.round(reais * 100)
+}
+
 function defaultRenewDates() {
   const start = new Date()
   const end = new Date()
@@ -319,15 +331,27 @@ export function LicensesPage() {
 function PlanoEditor({ config, onSaved }: { config: LicencaPlanoConfig; onSaved: () => void }) {
   const [maxEventos, setMaxEventos] = useState(config.maxEventos?.toString() ?? '')
   const [maxUsuarios, setMaxUsuarios] = useState(config.maxUsuarios?.toString() ?? '')
+  const [valorReais, setValorReais] = useState(centavosToReaisInput(config.valorCentavos))
+  const [periodoDias, setPeriodoDias] = useState(String(config.periodoDias ?? ''))
   const [permissoes, setPermissoes] = useState<LicencaPermissao[]>(config.permissoes)
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const valorCentavos = reaisToCentavos(valorReais)
+      const dias = Number(periodoDias)
+      if (!Number.isFinite(valorCentavos) || valorCentavos < 0) {
+        throw new Error('Informe um preço válido')
+      }
+      if (!Number.isFinite(dias) || dias < 1) {
+        throw new Error('Informe o período em dias')
+      }
       const res = await updatePlanoConfig(config.plano, {
         maxEventos: parseOptionalInt(maxEventos),
         maxUsuarios: parseOptionalInt(maxUsuarios),
         permissoes,
+        valorCentavos,
+        periodoDias: dias,
       })
       if (isApiFailure(res)) throw new Error(res.message)
       return res.data
@@ -343,6 +367,24 @@ function PlanoEditor({ config, onSaved }: { config: LicencaPlanoConfig; onSaved:
       </Typography>
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
       <Stack spacing={2}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            label="Preço (R$)"
+            value={valorReais}
+            onChange={(e) => setValorReais(e.target.value)}
+            size="small"
+            fullWidth
+            helperText="Valor cobrado no checkout. Trial use 0."
+          />
+          <TextField
+            label="Período (dias)"
+            value={periodoDias}
+            onChange={(e) => setPeriodoDias(e.target.value)}
+            size="small"
+            type="number"
+            fullWidth
+          />
+        </Stack>
         <LimitesFields
           maxEventos={maxEventos}
           maxUsuarios={maxUsuarios}

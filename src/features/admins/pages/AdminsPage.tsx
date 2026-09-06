@@ -181,7 +181,7 @@ export function AdminsPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap>
+                    <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
                       {(row.permissoes ?? []).map((p) => (
                         <Chip key={p} size="small" label={ADMIN_PERMISSAO_LABELS[p] ?? p} variant="outlined" />
                       ))}
